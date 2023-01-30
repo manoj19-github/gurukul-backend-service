@@ -3,6 +3,7 @@ import { config } from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import { errorHandler, notFound } from './app/http/middlewares/errorHandler.middleware';
 
 class ExpressApp {
 	app: Application;
@@ -14,16 +15,20 @@ class ExpressApp {
 		this.routes();
 	}
 	private middleware(): void {
-		this.app.use(cors({ credentials: true, origin: '*',methods: "GET,POST,PUT,DELETE" }));
+		this.app.use(cors({ credentials: true, origin: '*', methods: 'GET,POST,PUT,DELETE' }));
 		this.app.use(urlencoded({ extended: true, limit: '50mb' }));
 		this.app.use(json({ limit: '50mb' }));
 		this.app.use(helmet());
-		this.app.use(morgan("dev"));
+		this.app.use(morgan('dev'));
 	}
 	private routes(): void {
 		this.app.get('/', (req: Request, res: Response) => {
 			return res.send('<h2>Server is running .....</h2>');
 		});
+
+		// put this at the last of all routes
+		this.app.use(notFound);
+		this.app.use(errorHandler);
 	}
 	public listen(): void {
 		// connectDB();
