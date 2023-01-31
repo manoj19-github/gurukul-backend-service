@@ -6,8 +6,8 @@ import morgan from 'morgan';
 import { errorHandler, notFound } from './app/http/middlewares/errorHandler.middleware';
 
 class ExpressApp {
-	app: Application;
-	PORT: unknown;
+	private app: Application;
+	private PORT: unknown;
 	constructor() {
 		this.app = express();
 		this.PORT = process.env.PORT ?? 5000;
