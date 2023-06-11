@@ -1,14 +1,16 @@
-import express, { Application, urlencoded, json, Request, Response } from 'express';
-import { config } from 'dotenv';
 import cors from 'cors';
+import { config } from 'dotenv';
+import express, { Application, Request, Response, json, urlencoded } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import { errorHandler, notFound } from './app/http/middlewares/errorHandler.middleware';
-
+import { errorHandler, notFound } from './src/http/middlewares/errorHandler.middleware';
+import RoutesMain from './src/routes';
 class ExpressApp {
 	private app: Application;
 	private PORT: unknown;
+	private routesMain = new RoutesMain();
 	constructor() {
+		config();
 		this.app = express();
 		this.PORT = process.env.PORT ?? 5000;
 		this.middleware();
@@ -25,6 +27,7 @@ class ExpressApp {
 		this.app.get('/', (req: Request, res: Response) => {
 			return res.send('<h2>Server is running .....</h2>');
 		});
+		this.routesMain.initializeAllRoutes(this.app);
 
 		// put this at the last of all routes
 		this.app.use(notFound);
@@ -37,6 +40,6 @@ class ExpressApp {
 		});
 	}
 }
-config();
+
 const server = new ExpressApp();
 server.listen();

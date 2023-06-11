@@ -10,7 +10,23 @@
 		"resolveJsonModule": true,
 		"declaration": true,
 		"forceConsistentCasingInFileNames": true,
-		"sourceMap": true
+		"sourceMap": true,
+		"incremental": true,
+		"baseUrl": "./src",
+		"paths": {
+			"@/*": ["*"],
+			"@/controllers/*": ["http/controllers/*"],
+			"@/middlewares/*": ["http/middlewares/*"],
+			"@/dtos/*": ["http/dtos/*"],
+			"@/services/*": ["http/services/*"],
+			"@/interfaces/*": ["interfaces/*"],
+			"@/schema/*": ["schema/*"],
+			"@/routes/*": ["routes/*"],
+			"@/lib/*": ["lib/*"],
+			"@/config/*": ["config/*"],
+			"@/types/*": ["types/*"],
+			"@/utils/*": ["utils/*"]
+		}
 	},
 	"include": ["src"],
 	"exclude": ["node_modules"]
