@@ -1,8 +1,10 @@
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { config } from 'dotenv';
 import express, { Application, Request, Response, json, urlencoded } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import connectDB from './src/config/db.config';
 import { errorHandler, notFound } from './src/http/middlewares/errorHandler.middleware';
 import RoutesMain from './src/routes';
 class ExpressApp {
@@ -22,6 +24,7 @@ class ExpressApp {
 		this.app.use(json({ limit: '50mb' }));
 		this.app.use(helmet());
 		this.app.use(morgan('dev'));
+		this.app.use(cookieParser());
 	}
 	private routes(): void {
 		this.app.get('/', (req: Request, res: Response) => {
@@ -34,7 +37,7 @@ class ExpressApp {
 		this.app.use(errorHandler);
 	}
 	public listen(): void {
-		// connectDB();
+		connectDB();
 		this.app.listen(this.PORT, () => {
 			console.log(`Server is listening on  port : ${this.PORT}`);
 		});
