@@ -7,6 +7,7 @@ import morgan from 'morgan';
 import connectDB from './src/config/db.config';
 import { errorHandler, notFound } from './src/http/middlewares/errorHandler.middleware';
 import RoutesMain from './src/routes';
+
 class ExpressApp {
 	private app: Application;
 	private PORT: unknown;
@@ -36,9 +37,9 @@ class ExpressApp {
 		this.app.use(notFound);
 		this.app.use(errorHandler);
 	}
-	public listen(): void {
-		connectDB();
-		this.app.listen(this.PORT, () => {
+	public async listen(): Promise<void> {
+		await connectDB();
+		await this.app.listen(this.PORT, () => {
 			console.log(`Server is listening on  port : ${this.PORT}`);
 		});
 	}
