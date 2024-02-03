@@ -1,13 +1,17 @@
-import UserModel from '@/schema/user.schema';
 import { NextFunction, Request, Response } from 'express';
-import { HttpException } from '../exceptions/http.exceptions';
+import { UserService } from '../services/user.service';
 
 export class UserController {
 	async registerController(req: Request, res: Response, next: NextFunction) {
 		try {
 			const { name, email, password, avatar, userRole } = req.body;
-			const isEmailExists = await UserModel.findOne({ email });
-			if (!!isEmailExists) throw new HttpException(400, 'Email already exists');
-		} catch (error: any) {}
+			const newUser = await UserService.registerService(name, email, password, avatar, userRole);
+			return res.status(200).json({
+				message: 'User Successfully Registered',
+				user: newUser
+			});
+		} catch (error: any) {
+			next(error);
+		}
 	}
 }

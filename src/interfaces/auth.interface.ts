@@ -1,4 +1,5 @@
 import { IUserRole } from '@/schema/user.schema';
+import { JwtPayload } from 'jsonwebtoken';
 export interface IUserBody {
 	_id: string;
 	email: string;
@@ -6,6 +7,14 @@ export interface IUserBody {
 }
 
 export interface RequestWithUser extends Request {
-	user: IUserBody;
+	user?: IUserBody;
 	body: any;
+	headers: any;
+}
+
+export interface AuthJWTPayload extends JwtPayload {
+	expiration: Date;
+	_id: string;
+	email: string;
+	role: IUserRole;
 }

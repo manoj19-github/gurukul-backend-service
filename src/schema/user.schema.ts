@@ -6,6 +6,10 @@ export enum IUserRole {
 	TEACHER = 'TEACHER',
 	ADMIN = 'ADMIN'
 }
+export interface TokenVerification {
+	token: string;
+	expiration: Date;
+}
 export interface IUserSchema {
 	name: string;
 	email: string;
@@ -14,6 +18,12 @@ export interface IUserSchema {
 	avatar: string;
 	isVerified: boolean;
 	courses: string[];
+	resetPasswordVerification?: TokenVerification;
+	isEmailVerified: boolean;
+	resetEmailVerification?: TokenVerification;
+	emailVerication?: TokenVerification;
+	isRegistered: boolean;
+
 	comparePassword: (password: string) => Promise<boolean>;
 }
 
@@ -33,6 +43,7 @@ export const UserSchema: Schema<IUserSchema> = new Schema(
 				}
 			}
 		},
+
 		password: {
 			type: String,
 			required: true,
@@ -55,7 +66,33 @@ export const UserSchema: Schema<IUserSchema> = new Schema(
 				type: Schema.Types.ObjectId,
 				ref: 'Courses'
 			}
-		]
+		],
+		resetPasswordVerification: {
+			type: {
+				token: String,
+				expiration: Date
+			}
+		},
+		isEmailVerified: {
+			type: Boolean,
+			default: false
+		},
+		resetEmailVerification: {
+			type: {
+				token: String,
+				expiration: Date
+			}
+		},
+		emailVerication: {
+			type: {
+				token: String,
+				expiration: Date
+			}
+		},
+		isRegistered: {
+			type: Boolean,
+			default: false
+		}
 	},
 	{ timestamps: true }
 );

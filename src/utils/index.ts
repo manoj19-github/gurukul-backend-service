@@ -1,6 +1,7 @@
 import { IUserRole } from '@/schema/user.schema';
 import JWT from 'jsonwebtoken';
 import { ObjectId } from 'mongoose';
+import { createTransport, SendMailOptions } from 'nodemailer';
 export class UtilsMain {
 	static validateEmail(email: string) {
 		// tslint:disable-next-line:max-line-length
@@ -9,6 +10,32 @@ export class UtilsMain {
 		return expression.test(email);
 	}
 	static async JWTSignup({ email, role, _id }: { email: string; role: IUserRole; _id: ObjectId }): Promise<string> {
-		return await JWT.sign({ email, role, _id }, process.env.JWT_SECRET!);
+		const expiresIn: any = process.env.JWT_EXPIRES;
+		const expiration = new Date();
+		expiration.setTime(expiration.getTime() + expiresIn * 1000);
+		return await JWT.sign({ email, role, _id, expiration }, process.env.JWT_SECRET!);
+	}
+
+	static async sendMailMethod(mailOptions: SendMailOptions): Promise<boolean> {
+		const transporter = createTransport({
+			host: 'smtp.gmail.com',
+			secureConnection: false, // TLS requires secureConnection to be false
+			port: 465,
+			secure: true,
+			auth: {
+				user: process.env.EMAIL_USERNAME,
+				pass: process.env.EMAIL_USERNAME
+			},
+			tls: {
+				rejectUnAuthorized: true
+			}
+		});
+		return new Promise((resolve, reject) => {
+			transporter.sendMail(mailOptions, (error, _) => {
+				console.log('error: ', error);
+				if (error) return reject(false);
+				return resolve(true);
+			});
+		});
 	}
 }
