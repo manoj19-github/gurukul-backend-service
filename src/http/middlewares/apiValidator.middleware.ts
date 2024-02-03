@@ -10,8 +10,7 @@ const DTOValidationMiddleware =
 		validate(dtoObject, { skipMissingProperties })
 			.then((errors: ValidationError[]) => {
 				if (errors.length > 0) {
-					const dtoErrors = errors.map((self: ValidationError) => (Object as any).values(self).join(', ')).join(';');
-					return new HttpException(400, dtoErrors);
+					return res.status(400).json({ message: errors });
 				} else {
 					sanitize(dtoObject);
 					req.body = dtoObject;

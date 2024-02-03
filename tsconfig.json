@@ -13,6 +13,7 @@
 		"sourceMap": true,
 		"incremental": true,
 		"baseUrl": "./src",
+		"experimentalDecorators": true,
 		"paths": {
 			"@/*": ["*"],
 			"@/controllers/*": ["http/controllers/*"],

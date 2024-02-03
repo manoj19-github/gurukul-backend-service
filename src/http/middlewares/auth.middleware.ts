@@ -2,7 +2,7 @@ import { AuthJWTPayload, IUserBody, RequestWithUser } from '@/interfaces/auth.in
 import UserModel, { IUserRole } from '@/schema/user.schema';
 import { NextFunction, Response } from 'express';
 import JWT from 'jsonwebtoken';
-const AuthMiddleware = (userRole: IUserRole[]) => async (req: RequestWithUser, res: Response, next: NextFunction) => {
+const AuthMiddleware = (userRole?: IUserRole[]) => async (req: RequestWithUser, res: Response, next: NextFunction) => {
 	if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
 		try {
 			const userToken = req.headers.authorization.split(' ')[1];
@@ -16,7 +16,7 @@ const AuthMiddleware = (userRole: IUserRole[]) => async (req: RequestWithUser, r
 					});
 
 				// authorization check
-				if (userRole.includes(decoded.role))
+				if (!!userRole && !userRole.includes(decoded.role))
 					return res.status(403).json({
 						status: false,
 						message: 'Authrization Error occured'

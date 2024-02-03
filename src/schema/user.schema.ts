@@ -1,6 +1,6 @@
-import { UtilsMain } from '@/utils';
 import bcrypt from 'bcrypt';
 import { Schema, model } from 'mongoose';
+import { UtilsMain } from '../utils';
 export enum IUserRole {
 	STUDENT = 'STUDENT',
 	TEACHER = 'TEACHER',
@@ -16,13 +16,13 @@ export interface IUserSchema {
 	userRole: string;
 	password: string;
 	avatar: string;
-	isVerified: boolean;
 	courses: string[];
 	resetPasswordVerification?: TokenVerification;
 	isEmailVerified: boolean;
 	resetEmailVerification?: TokenVerification;
 	emailVerication?: TokenVerification;
 	isRegistered: boolean;
+	enabled: boolean;
 
 	comparePassword: (password: string) => Promise<boolean>;
 }
@@ -47,8 +47,7 @@ export const UserSchema: Schema<IUserSchema> = new Schema(
 		password: {
 			type: String,
 			required: true,
-			minlength: 6,
-			select: false
+			minlength: 6
 		},
 		avatar: {
 			type: String
@@ -56,10 +55,6 @@ export const UserSchema: Schema<IUserSchema> = new Schema(
 		userRole: {
 			type: String,
 			default: IUserRole.STUDENT
-		},
-		isVerified: {
-			type: Boolean,
-			default: false
 		},
 		courses: [
 			{
@@ -90,6 +85,10 @@ export const UserSchema: Schema<IUserSchema> = new Schema(
 			}
 		},
 		isRegistered: {
+			type: Boolean,
+			default: false
+		},
+		enabled: {
 			type: Boolean,
 			default: false
 		}
