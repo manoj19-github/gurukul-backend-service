@@ -11,7 +11,7 @@ export class UtilsMain {
 		const expiresIn: any = process.env.JWT_EXPIRES;
 		const expiration = new Date();
 		expiration.setTime(expiration.getTime() + expiresIn * 1000);
-		return await JWT.sign({ email, role, _id, expiration }, process.env.JWT_SECRET!);
+		return await JWT.sign({ email, role, _id, expiration }, process.env.JWT_SECRET!, { expiresIn: expiresIn });
 	}
 
 	static async sendMailMethod(mailOptions: SendMailOptions): Promise<boolean> {

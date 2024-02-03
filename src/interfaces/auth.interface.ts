@@ -1,4 +1,5 @@
-import { IUserRole } from '@/schema/user.schema';
+import { IUserRole } from '../schema/user.schema';
+import { Request } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 export interface IUserBody {
 	_id: string;

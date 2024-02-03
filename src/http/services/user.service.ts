@@ -22,7 +22,7 @@ export class UserService {
 			to: email,
 			subject: `Welcome To Gurukul`,
 			html: `
-      
+
               <h1 style="text-align:center">GuruKul</h1>
               <p style="text-align:center"> <small>Your Future, Our Commitment</small></p>
               <p></p>
@@ -81,7 +81,7 @@ export class UserService {
 			to: email,
 			subject: `Welcome To Gurukul`,
 			html: `
-      
+
               <h1 style="text-align:center">GuruKul</h1>
               <p style="text-align:center"> <small>Your Future, Our Commitment</small></p>
               <p></p>
@@ -93,7 +93,7 @@ export class UserService {
 		return new Promise((resolve, reject) => {
 			return UtilsMain.sendMailMethod(mailOptions)
 				.then((res) => {
-					UserModel.updateOne({ email }, { $set: { resetPasswordVerification: { token, expiration } } })
+					UserModel.updateOne({ _id: isUserExists._id }, { $set: { resetPasswordVerification: { token, expiration } } })
 						.then(() => resolve(true))
 						.catch(() => reject(false));
 				})
@@ -121,7 +121,7 @@ export class UserService {
 		return false;
 	}
 	/***
-	 * change email service
+	 * change email request service
 	 * @param {string} email
 	 * @param {string} userRole
 	 * @memberof UserService
@@ -138,7 +138,7 @@ export class UserService {
 			to: email,
 			subject: `Change Email Request`,
 			html: `
-      
+
               <h1 style="text-align:center">GuruKul</h1>
               <p style="text-align:center"> <small>Your Future, Our Commitment</small></p>
               <p></p>
@@ -150,13 +150,20 @@ export class UserService {
 		return new Promise((resolve, reject) => {
 			return UtilsMain.sendMailMethod(mailOptions)
 				.then((res) => {
-					UserModel.updateOne({ email }, { $set: { resetEmailVerification: { token, expiration } } })
+					UserModel.updateOne({ _id: isUserExists._id }, { $set: { resetEmailVerification: { token, expiration } } })
 						.then(() => resolve(true))
 						.catch(() => reject(false));
 				})
 				.catch(() => reject(false));
 		});
 	}
+	/***
+	 * reset email service
+	 * @param {string} email
+	 * @param {string} userRole
+	 * @returns {Promise<boolean>}
+	 * @memberof UserService
+	 **/
 	static async resetEmailRequest(oldEmail: string, code: string, newEmail: string, userRole: string): Promise<boolean> {
 		const userDetails = await UserModel.findOne({ email: oldEmail, userRole });
 		if (!!userDetails && userDetails?.resetEmailVerification && userDetails.enabled !== false) {
@@ -164,6 +171,65 @@ export class UserService {
 				throw new HttpException(400, 'token expired');
 			if (userDetails.resetEmailVerification.token === code) {
 				await UserModel.updateOne({ _id: userDetails._id }, { $set: { email: newEmail, resetEmailVerification: undefined } });
+				return true;
+			} else throw new HttpException(400, 'invalid token');
+		}
+		return false;
+	}
+	/***
+	 * validate  email request service
+	 * @param {string} email
+	 * @param {string} userRole
+	 * @returns {Promise<boolean>}
+	 * @memberof UserService
+	 **/
+	static async validateEmailRequestService(email: string, userRole: string): Promise<boolean> {
+		const token = randomBytes(3).toString('hex');
+		const isUserExists = await UserModel.findOne({ email, userRole }).select('-password');
+		if (!isUserExists) throw new HttpException(400, 'Email is not found');
+		const expiresIn: any = process.env.JWT_EXPIRES;
+		const expiration = new Date();
+		expiration.setTime(expiration.getTime() + expiresIn * 1000);
+		const mailOptions: SendMailOptions = {
+			from: process.env.EMAIL_USERNAME!,
+			to: email,
+			subject: `Validate Email Request`,
+			html: `
+
+              <h1 style="text-align:center">GuruKul</h1>
+              <p style="text-align:center"> <small>Your Future, Our Commitment</small></p>
+              <p></p>
+              <p></p>
+              <p></p>
+              <p style="text-align:center">${isUserExists.name}, Validate your password with this : ${token} <br/><small> please note this token is invalid after 24 hours of generate</small> </p>
+      `
+		};
+		return new Promise((resolve, reject) => {
+			return UtilsMain.sendMailMethod(mailOptions)
+				.then((res) => {
+					UserModel.updateOne({ _id: isUserExists._id }, { $set: { emailVerication: { token, expiration } } })
+						.then(() => resolve(true))
+						.catch(() => reject(false));
+				})
+				.catch(() => reject(false));
+		});
+	}
+
+	/***
+	 * validate email service
+	 * @param {string} email
+	 * @param {string} userRole
+	 * @param {string} code
+	 * @returns {Promise<boolean>}
+	 * @memberof UserService
+	 **/
+	static async validateEmailService(email: string, userRole: string, code: string): Promise<boolean> {
+		const isUserExists = await UserModel.findOne({ email, userRole }).select('-password');
+		if (!isUserExists) throw new HttpException(400, 'Email is not found');
+		if (!!isUserExists && isUserExists?.emailVerication && isUserExists.enabled !== false) {
+			if (new Date().getTime() > new Date(isUserExists.emailVerication.expiration).getTime()) throw new HttpException(400, 'token expired');
+			if (isUserExists.emailVerication.token === code) {
+				await UserModel.updateOne({ _id: isUserExists._id }, { $set: { emailVerication: undefined, isEmailVerified: true } });
 				return true;
 			} else throw new HttpException(400, 'invalid token');
 		}

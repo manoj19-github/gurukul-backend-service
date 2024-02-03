@@ -1,8 +1,17 @@
-import { ChangeEmailRequestDTO, ForgotPasswordDTO, LoginDTO, RegistrationDTO, ResetEmailDTO, ResetPasswordDTO } from '@/http/dtos/user.dto';
+import {
+	ChangeEmailRequestDTO,
+	ForgotPasswordDTO,
+	LoginDTO,
+	RegistrationDTO,
+	ResetEmailDTO,
+	ResetPasswordDTO,
+	ValidateEmailDTO
+} from '../http/dtos/user.dto';
 import { Router } from 'express';
 import { UserController } from '../http/controllers/user.controller';
 import DTOValidationMiddleware from '../http/middlewares/apiValidator.middleware';
 import { Routes } from '../interfaces/routes.interface';
+import AuthMiddleware from '../http/middlewares/auth.middleware';
 
 export class UserRoute implements Routes {
 	path?: string | undefined;
@@ -20,5 +29,16 @@ export class UserRoute implements Routes {
 		this.router.post(`${this.path}/resetpassword`, DTOValidationMiddleware(ResetPasswordDTO), this.userCTRL.resetPassword);
 		this.router.post(`${this.path}/changeemailrequest`, DTOValidationMiddleware(ChangeEmailRequestDTO), this.userCTRL.changeEmailRequest);
 		this.router.post(`${this.path}/resetemail`, DTOValidationMiddleware(ResetEmailDTO), this.userCTRL.resetEmailOfUser);
+		this.router.post(
+			`${this.path}/validateemailrequest`,
+			DTOValidationMiddleware(ChangeEmailRequestDTO),
+			this.userCTRL.validateMyEmailRequest
+		);
+		this.router.post(
+			`${this.path}/validateemail`,
+			AuthMiddleware(),
+			DTOValidationMiddleware(ValidateEmailDTO),
+			this.userCTRL.validateEmail
+		);
 	}
 }

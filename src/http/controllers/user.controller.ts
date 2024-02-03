@@ -29,10 +29,8 @@ export class UserController {
 	async forgotPassword(req: Request, res: Response, next: NextFunction) {
 		try {
 			const { email, userRole } = req.body;
-			const forgotPasswordRes = await UserService.forgotPasswordService(email, userRole);
-			if (forgotPasswordRes) {
+			if (await UserService.forgotPasswordService(email, userRole))
 				return res.status(200).json({ message: 'password reset request code sent to your registered email' });
-			}
 			return res.status(500).json({ message: 'something went wrong your request failed' });
 		} catch (error: any) {
 			next(error);
@@ -41,9 +39,8 @@ export class UserController {
 	async resetPassword(req: Request, res: Response, next: NextFunction) {
 		try {
 			const { email, password, code, userRole } = req.body;
-			if (await UserService.resetPassword(email, code, password, userRole)) {
+			if (await UserService.resetPassword(email, code, password, userRole))
 				return res.status(200).json({ message: 'your password reset successfull' });
-			}
 			return res.status(500).json({ message: 'something went wrong your request failed' });
 		} catch (error: any) {
 			next(error);
@@ -52,9 +49,8 @@ export class UserController {
 	async changeEmailRequest(req: Request, res: Response, next: NextFunction) {
 		try {
 			const { email, userRole } = req.body;
-			if (await UserService.changeEmailRequestService(email, userRole)) {
+			if (await UserService.changeEmailRequestService(email, userRole))
 				return res.status(200).json({ message: 'your email change request sent successfull' });
-			}
 			return res.status(500).json({ message: 'something went wrong your request failed' });
 		} catch (error: any) {
 			next(error);
@@ -63,9 +59,28 @@ export class UserController {
 	async resetEmailOfUser(req: Request, res: Response, next: NextFunction) {
 		try {
 			const { oldEmail, newEmail, userRole, code } = req.body;
-			if (await UserService.resetEmailRequest(oldEmail, code, newEmail, userRole)) {
+			if (await UserService.resetEmailRequest(oldEmail, code, newEmail, userRole))
 				return res.status(200).json({ message: 'your email changed successfully' });
-			}
+			return res.status(500).json({ message: 'something went wrong your request failed' });
+		} catch (error: any) {
+			next(error);
+		}
+	}
+	async validateMyEmailRequest(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { email, userRole } = req.body;
+			if (await UserService.validateEmailRequestService(email, userRole))
+				return res.status(200).json({ message: 'your email verification mail sent successfully' });
+			return res.status(500).json({ message: 'something went wrong your request failed' });
+		} catch (error: any) {
+			next(error);
+		}
+	}
+	async validateEmail(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { email, userRole, code } = req.body;
+			if (await UserService.validateEmailService(email, userRole, code))
+				return res.status(200).json({ message: 'your email verified successfully' });
 			return res.status(500).json({ message: 'something went wrong your request failed' });
 		} catch (error: any) {
 			next(error);

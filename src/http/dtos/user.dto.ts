@@ -75,6 +75,19 @@ export class ChangeEmailRequestDTO {
 	userRole: string | undefined;
 }
 
+export class ValidateEmailDTO {
+	@IsEmail({}, { message: 'Provided Email is not valid' })
+	@IsNotEmpty()
+	@Trim()
+	email: string | undefined;
+	@IsOptional()
+	@IsString()
+	userRole: string | undefined;
+	@IsString()
+	@IsNotEmpty()
+	code: string | undefined;
+}
+
 export class ResetEmailDTO {
 	@IsEmail({}, { message: 'Provided Email is not valid' })
 	@IsNotEmpty()
