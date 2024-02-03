@@ -34,8 +34,9 @@ class ExpressApp {
 		this.routesMain.initializeAllRoutes(this.app);
 
 		// put this at the last of all routes
-		this.app.use(notFound);
+
 		this.app.use(errorHandler);
+		this.app.use(notFound);
 	}
 	public async listen(): Promise<void> {
 		await connectDB();
