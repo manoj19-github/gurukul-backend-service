@@ -31,3 +31,22 @@ export interface AuthToken {
 	accessToken: string;
 	refreshToken: string;
 }
+
+export interface UpdateAuthToken extends AuthToken {
+	userId: any;
+}
+
+export interface GenerateAuthTokenInterface {
+	email: string;
+	role: string;
+	_id: string;
+	refreshTokenExpiresIn: any;
+	accessTokenExpiresIn: any;
+}
+
+export interface GenerateAuthTokenResponse {
+	accessToken: string;
+	accessTokenExpiresDate: Date;
+	refreshToken: string;
+	refreshTokenExpiresDate: Date;
+}

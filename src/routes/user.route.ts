@@ -24,6 +24,7 @@ export class UserRoute implements Routes {
 	}
 	private initializeRoutes(): void {
 		this.router.post(`${this.path}/registration`, DTOValidationMiddleware(RegistrationDTO), this.userCTRL.registerController);
+		this.router.post(`${this.path}/sociallogin`, DTOValidationMiddleware(RegistrationDTO), this.userCTRL.socialLoginUser);
 		this.router.post(`${this.path}/login`, DTOValidationMiddleware(LoginDTO), this.userCTRL.loginController);
 		this.router.post(`${this.path}/forgotpassword`, DTOValidationMiddleware(ForgotPasswordDTO), this.userCTRL.forgotPassword);
 		this.router.post(`${this.path}/resetpassword`, DTOValidationMiddleware(ResetPasswordDTO), this.userCTRL.resetPassword);
@@ -40,6 +41,10 @@ export class UserRoute implements Routes {
 			DTOValidationMiddleware(ValidateEmailDTO),
 			this.userCTRL.validateEmail
 		);
-		this.router.get(`${this.path}/logout`, this.userCTRL.logoutUser);
+		this.router.get(`${this.path}/logout`, AuthMiddleware(), this.userCTRL.logoutUser);
+		this.router.get(`${this.path}/refreshtoken`, AuthMiddleware(), this.userCTRL.updateAccessToken);
+		this.router.get(`${this.path}/getloggdinuser`, AuthMiddleware(), this.userCTRL.getUserByToken);
+
+
 	}
 }

@@ -1,4 +1,4 @@
-import { AuthToken, ITokenOptions } from '../interfaces/auth.interface';
+import { AuthToken, GenerateAuthTokenInterface, GenerateAuthTokenResponse, ITokenOptions } from '../interfaces/auth.interface';
 import JWT from 'jsonwebtoken';
 import { createTransport, SendMailOptions } from 'nodemailer';
 import moment from 'moment';
@@ -12,41 +12,29 @@ export class UtilsMain {
 		return expression.test(email);
 	}
 	static async JWTSignup({ res, email, role, _id }: { res: Response; email: string; role: string; _id: any }): Promise<AuthToken> {
-		const accessTokenExpiresIn: any = process.env.JWT_ACCESS_TOKEN_EXPIRES || '5d';
-		const refreshTokenExpiresIn: any = process.env.JWT_REFRESH_TOKEN_EXPIRES || '365d';
-		const accessToken = await JWT.sign({ email, role, _id }, process.env.JWT_SECRET!, { expiresIn: accessTokenExpiresIn });
-		const refreshToken = await JWT.sign({ email, role, _id }, process.env.JWT_SECRET!, {
-			expiresIn: refreshTokenExpiresIn
-		});
-		const accessTimeDays = String(accessTokenExpiresIn)
-			.split('')
-			.filter((self) => Number.isInteger(Number(self)))
-			.join('');
-		const refreshTimeDays = String(refreshTokenExpiresIn)
-			.split('')
-			.filter((self) => Number.isInteger(Number(self)))
-			.join('');
-		const accessTokenExpiresDate = new Date(moment().add(accessTimeDays, 'days').format('YYYY-MM-DD')).getTime();
-		const refreshTokenExpiresDate = new Date(moment().add(refreshTimeDays, 'days').format('YYYY-MM-DD')).getTime();
+		const accessTokenExpiresIn: any = process.env.JWT_ACCESS_TOKEN_EXPIRES || '5m';
+		const refreshTokenExpiresIn: any = process.env.JWT_REFRESH_TOKEN_EXPIRES || '31d';
+
+		const generateAuthTokenDetails = await UtilsMain.generateAuthToken({ email, role, _id, accessTokenExpiresIn, refreshTokenExpiresIn });
 		const accessTokenOptions: ITokenOptions = {
-			expires: new Date(Date.now() + accessTokenExpiresDate + 2000),
-			maxAge: accessTokenExpiresDate,
+			expires: generateAuthTokenDetails.accessTokenExpiresDate,
+			maxAge: generateAuthTokenDetails.accessTokenExpiresDate.getTime(),
 			httpOnly: true,
 			sameSite: 'lax',
 			secure: process.env.NODE_ENV === 'production'
 		};
 		const refreshTokenOptions: ITokenOptions = {
-			expires: new Date(Date.now() + refreshTokenExpiresDate + 2000),
-			maxAge: refreshTokenExpiresDate,
+			expires: generateAuthTokenDetails.refreshTokenExpiresDate,
+			maxAge: generateAuthTokenDetails.refreshTokenExpiresDate.getTime(),
 			httpOnly: true,
 			sameSite: 'lax',
 			secure: process.env.NODE_ENV === 'production'
 		};
-		res.cookie('access_token', accessToken, accessTokenOptions);
-		res.cookie('refresh_token', refreshToken, refreshTokenOptions);
+		res.cookie('access_token', generateAuthTokenDetails.accessToken, accessTokenOptions);
+		res.cookie('refresh_token', generateAuthTokenDetails.refreshToken, refreshTokenOptions);
 		// UPLOAD TOKEN TO REDIS
-		redis.set(_id, JSON.stringify({ email, role }));
-		return { accessToken, refreshToken };
+		await redis.set(_id, JSON.stringify({ email, role }));
+		return { accessToken: generateAuthTokenDetails.accessToken, refreshToken: generateAuthTokenDetails.refreshToken };
 	}
 
 	static async sendMailMethod(mailOptions: SendMailOptions): Promise<boolean> {
@@ -66,10 +54,35 @@ export class UtilsMain {
 		});
 		return new Promise((resolve, reject) => {
 			transporter.sendMail(mailOptions, (error, _) => {
-				console.log('error: ', error);
 				if (error) return reject(false);
 				return resolve(true);
 			});
 		});
+	}
+	static async generateAuthToken({
+		email,
+		role,
+		_id,
+		accessTokenExpiresIn,
+		refreshTokenExpiresIn
+	}: GenerateAuthTokenInterface): Promise<GenerateAuthTokenResponse> {
+		const accessToken = await JWT.sign({ email: email, role: role, _id: _id }, process.env.JWT_SECRET!, {
+			expiresIn: accessTokenExpiresIn
+		});
+		const refreshToken = await JWT.sign({ email: email, role: role, _id: _id }, process.env.JWT_SECRET!, {
+			expiresIn: refreshTokenExpiresIn
+		});
+		const accessTimeDays = String(accessTokenExpiresIn)
+			.split('')
+			.filter((self) => Number.isInteger(Number(self)))
+			.join('');
+		const refreshTimeDays = String(refreshTokenExpiresIn)
+			.split('')
+			.filter((self) => Number.isInteger(Number(self)))
+			.join('');
+		const accessTokenExpiresDate = new Date(moment().add(accessTimeDays, 'minutes').format('YYYY-MM-DD HH:mm:ss'));
+		const refreshTokenExpiresDate = new Date(moment().add(refreshTimeDays, 'days').format('YYYY-MM-DD'));
+
+		return { accessToken, accessTokenExpiresDate, refreshToken, refreshTokenExpiresDate };
 	}
 }

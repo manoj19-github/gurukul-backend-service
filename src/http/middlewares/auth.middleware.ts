@@ -3,11 +3,18 @@ import UserModel, { IUserRole } from '../../schema/user.schema';
 import { NextFunction, Response } from 'express';
 import JWT from 'jsonwebtoken';
 const AuthMiddleware = (userRole?: IUserRole | IUserRole[]) => async (req: RequestWithUser, res: Response, next: NextFunction) => {
-	if (req.headers.authorization && req.headers.authorization.startsWith('Bearer') && req.headers.authorization.split(' ').length > 1) {
+	if (
+		!!req.cookies.access_token ||
+		(req.headers.authorization && req.headers.authorization.startsWith('Bearer') && req.headers.authorization.split(' ').length > 1)
+	) {
 		try {
-			const userToken = req.headers.authorization.split(' ')[1];
+			const userToken = req.cookies.access_token || req.headers.authorization.split(' ')[1];
 			if (userToken) {
 				const decoded = JWT.verify(userToken, process.env.JWT_SECRET!) as AuthJWTPayload;
+				if (!decoded)
+					return res.status(403).json({
+						message: 'access token is not valid '
+					});
 
 				// authorization check
 				if (
@@ -25,7 +32,7 @@ const AuthMiddleware = (userRole?: IUserRole | IUserRole[]) => async (req: Reque
 				});
 			}
 		} catch (err) {
-			console.log(`signin jsonwebtoken error :`);
+			console.log(`signin jsonwebtoken error :`, err);
 			return res.status(500).json({
 				message: 'internal server error'
 			});

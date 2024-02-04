@@ -1,3 +1,4 @@
+import { IsEmail } from 'class-validator';
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { SendMailOptions } from 'nodemailer';
@@ -5,6 +6,11 @@ import UserModel, { IUserRole, IUserSchema } from '../../schema/user.schema';
 import { UtilsMain } from '../../utils';
 import { HttpException } from '../exceptions/http.exceptions';
 import { Response } from 'express';
+import { AuthJWTPayload, AuthToken, ITokenOptions, UpdateAuthToken } from '../../interfaces/auth.interface';
+import JWT from 'jsonwebtoken';
+import { redis } from '../../config/redis.config';
+import moment from 'moment';
+import { ClientSession } from 'mongoose';
 export class UserService {
 	/***
 	 * Register service of user
@@ -13,10 +19,18 @@ export class UserService {
 	 * @memberof UserService
 	 **/
 
-	static async registerService(name: string, email: string, password: string, avatar: string, userRole: IUserRole): Promise<IUserSchema> {
+	static async registerService(
+		name: string,
+		email: string,
+		password: string,
+		avatar: string,
+		userRole: string | IUserRole
+		// opts: { session: ClientSession }
+	): Promise<IUserSchema> {
 		const isEmailExists = await UserModel.findOne({ email, userRole });
 		//  email duplication check
 		if (!!isEmailExists) throw new HttpException(400, 'Email already exists');
+		// const newRegistrationUser = await new UserModel({ name, email, password, avatar, userRole, isRegistered: true }).save(opts);
 		const newRegistrationUser = await UserModel.create({ name, email, password, avatar, userRole, isRegistered: true });
 		const mailOptions: SendMailOptions = {
 			from: process.env.EMAIL_USERNAME!,
@@ -235,5 +249,84 @@ export class UserService {
 			} else throw new HttpException(400, 'invalid token');
 		}
 		return false;
+	}
+	/***
+	 * update access token
+	 * @param {string} refreshToken
+	 * @param {Response} res
+	 * @returns {Promise<UpdateAuthToken>}
+	 * @memberof UserService
+	 **/
+	static async updateAccessTokenService(refreshToken: string, res: Response): Promise<UpdateAuthToken> {
+		const decoded = JWT.verify(refreshToken, process.env.JWT_SECRET!) as AuthJWTPayload;
+		if (!decoded) throw new HttpException(400, 'Refresh token is not valid');
+		const userSession = await redis.get(decoded._id);
+		if (!userSession) throw new HttpException(400, 'Refresh token is not valid');
+		const userDetails = JSON.parse(userSession);
+		if (!userDetails) throw new HttpException(400, 'Refresh token is not valid');
+		const accessTokenExpiresIn: any = process.env.JWT_ACCESS_TOKEN_EXPIRES || '5m';
+		const refreshTokenExpiresIn: any = process.env.JWT_REFRESH_TOKEN_EXPIRES || '31d';
+		const generateAuthTokenDetails = await UtilsMain.generateAuthToken({
+			email: userDetails.email,
+			role: userDetails.role,
+			_id: decoded._id,
+			accessTokenExpiresIn,
+			refreshTokenExpiresIn
+		});
+
+		const accessTokenOptions: ITokenOptions = {
+			expires: generateAuthTokenDetails.accessTokenExpiresDate,
+			maxAge: generateAuthTokenDetails.accessTokenExpiresDate.getTime(),
+			httpOnly: true,
+			sameSite: 'lax',
+			secure: process.env.NODE_ENV === 'production'
+		};
+		const refreshTokenOptions: ITokenOptions = {
+			expires: generateAuthTokenDetails.refreshTokenExpiresDate,
+			maxAge: generateAuthTokenDetails.refreshTokenExpiresDate.getTime(),
+			httpOnly: true,
+			sameSite: 'lax',
+			secure: process.env.NODE_ENV === 'production'
+		};
+		res.cookie('access_token', generateAuthTokenDetails.accessToken, accessTokenOptions);
+		res.cookie('refresh_token', generateAuthTokenDetails.refreshToken, refreshTokenOptions);
+		// UPLOAD SESSION TO REDIS
+		await redis.set(decoded._id, JSON.stringify({ email: userDetails.email, role: userDetails.role }));
+		return { accessToken: generateAuthTokenDetails.accessToken, refreshToken: generateAuthTokenDetails.refreshToken, userId: decoded._id };
+	}
+	/***
+	 * get logged in user details by auth token
+	 * @param {string} userId
+	 * @returns {Promise<IUserSchema | undefined>}
+	 * @memberof UserService
+	 **/
+	static async getUserByTokenService(userId: string) {
+		return await UserModel.findById(userId).select('-password');
+	}
+
+	/***
+	 * social login service
+	 * @param {string} name
+	 * @param {string} email
+	 * @param {string} password
+	 * @param {string} avatar
+	 * @param {string} userRole
+	 * @param {Response} res
+	 * @param {{ session: ClientSession }} opts
+	 * @returns {Promise<IUserSchema | undefined>}
+	 * @memberof UserService
+	 **/
+	static async socialLoginService(
+		name: string,
+		email: string,
+		password: string,
+		avatar: string,
+		userRole: string,
+		res: Response
+		// opts: { session: ClientSession }
+	) {
+		const isEmailExists = await UserModel.findOne({ email, userRole });
+		if (!isEmailExists) await UserService.registerService(name, email, password, avatar, userRole);
+		return await UserService.loginService(email, password, userRole, res);
 	}
 }
