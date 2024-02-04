@@ -17,7 +17,7 @@ export class UserController {
 	async loginController(req: Request, res: Response, next: NextFunction) {
 		try {
 			const { email, password, userRole } = req.body;
-			const loggedInDetails = await UserService.loginService(email, password, userRole);
+			const loggedInDetails = await UserService.loginService(email, password, userRole, res);
 			return res.status(200).json({
 				message: 'User Successfully logged in',
 				data: loggedInDetails
@@ -82,6 +82,17 @@ export class UserController {
 			if (await UserService.validateEmailService(email, userRole, code))
 				return res.status(200).json({ message: 'your email verified successfully' });
 			return res.status(500).json({ message: 'something went wrong your request failed' });
+		} catch (error: any) {
+			next(error);
+		}
+	}
+	async logoutUser(req: Request, res: Response, next: NextFunction) {
+		try {
+			res.cookie('access_token', '', { maxAge: 1 });
+			res.cookie('refresh_token', '', { maxAge: 1 });
+			return res.status(200).json({
+				message: 'Logout successfully'
+			});
 		} catch (error: any) {
 			next(error);
 		}

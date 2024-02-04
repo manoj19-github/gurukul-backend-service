@@ -14,8 +14,20 @@ export interface RequestWithUser extends Request {
 }
 
 export interface AuthJWTPayload extends JwtPayload {
-	expiration: Date;
 	_id: string;
 	email: string;
 	role: IUserRole;
+}
+
+export interface ITokenOptions {
+	expires: Date;
+	maxAge: number;
+	httpOnly: boolean;
+	sameSite: 'lax' | 'strict' | 'none' | undefined;
+	secure?: boolean;
+}
+
+export interface AuthToken {
+	accessToken: string;
+	refreshToken: string;
 }

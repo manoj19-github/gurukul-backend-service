@@ -1,5 +1,9 @@
+import { AuthToken, ITokenOptions } from '../interfaces/auth.interface';
 import JWT from 'jsonwebtoken';
 import { createTransport, SendMailOptions } from 'nodemailer';
+import moment from 'moment';
+import { Response } from 'express';
+import { redis } from '../config/redis.config';
 export class UtilsMain {
 	static validateEmail(email: string) {
 		// tslint:disable-next-line:max-line-length
@@ -7,11 +11,42 @@ export class UtilsMain {
 			/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 		return expression.test(email);
 	}
-	static async JWTSignup({ email, role, _id }: { email: string; role: string; _id: any }): Promise<string> {
-		const expiresIn: any = process.env.JWT_EXPIRES;
-		const expiration = new Date();
-		expiration.setTime(expiration.getTime() + expiresIn * 1000);
-		return await JWT.sign({ email, role, _id, expiration }, process.env.JWT_SECRET!, { expiresIn: expiresIn });
+	static async JWTSignup({ res, email, role, _id }: { res: Response; email: string; role: string; _id: any }): Promise<AuthToken> {
+		const accessTokenExpiresIn: any = process.env.JWT_ACCESS_TOKEN_EXPIRES || '5d';
+		const refreshTokenExpiresIn: any = process.env.JWT_REFRESH_TOKEN_EXPIRES || '365d';
+		const accessToken = await JWT.sign({ email, role, _id }, process.env.JWT_SECRET!, { expiresIn: accessTokenExpiresIn });
+		const refreshToken = await JWT.sign({ email, role, _id }, process.env.JWT_SECRET!, {
+			expiresIn: refreshTokenExpiresIn
+		});
+		const accessTimeDays = String(accessTokenExpiresIn)
+			.split('')
+			.filter((self) => Number.isInteger(Number(self)))
+			.join('');
+		const refreshTimeDays = String(refreshTokenExpiresIn)
+			.split('')
+			.filter((self) => Number.isInteger(Number(self)))
+			.join('');
+		const accessTokenExpiresDate = new Date(moment().add(accessTimeDays, 'days').format('YYYY-MM-DD')).getTime();
+		const refreshTokenExpiresDate = new Date(moment().add(refreshTimeDays, 'days').format('YYYY-MM-DD')).getTime();
+		const accessTokenOptions: ITokenOptions = {
+			expires: new Date(Date.now() + accessTokenExpiresDate + 2000),
+			maxAge: accessTokenExpiresDate,
+			httpOnly: true,
+			sameSite: 'lax',
+			secure: process.env.NODE_ENV === 'production'
+		};
+		const refreshTokenOptions: ITokenOptions = {
+			expires: new Date(Date.now() + refreshTokenExpiresDate + 2000),
+			maxAge: refreshTokenExpiresDate,
+			httpOnly: true,
+			sameSite: 'lax',
+			secure: process.env.NODE_ENV === 'production'
+		};
+		res.cookie('access_token', accessToken, accessTokenOptions);
+		res.cookie('refresh_token', refreshToken, refreshTokenOptions);
+		// UPLOAD TOKEN TO REDIS
+		redis.set(_id, JSON.stringify({ email, role }));
+		return { accessToken, refreshToken };
 	}
 
 	static async sendMailMethod(mailOptions: SendMailOptions): Promise<boolean> {

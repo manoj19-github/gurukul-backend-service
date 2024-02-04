@@ -40,5 +40,6 @@ export class UserRoute implements Routes {
 			DTOValidationMiddleware(ValidateEmailDTO),
 			this.userCTRL.validateEmail
 		);
+		this.router.get(`${this.path}/logout`, this.userCTRL.logoutUser);
 	}
 }

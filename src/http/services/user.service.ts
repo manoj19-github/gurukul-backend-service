@@ -4,6 +4,7 @@ import { SendMailOptions } from 'nodemailer';
 import UserModel, { IUserRole, IUserSchema } from '../../schema/user.schema';
 import { UtilsMain } from '../../utils';
 import { HttpException } from '../exceptions/http.exceptions';
+import { Response } from 'express';
 export class UserService {
 	/***
 	 * Register service of user
@@ -47,15 +48,15 @@ export class UserService {
 	 * @param {string} email
 	 * @param {string} password
 	 * @param {string} userRole
+	 * @param {Response} res
 	 * @memberof UserService
 	 **/
-	static async loginService(email: string, password: string, userRole: string) {
+	static async loginService(email: string, password: string, userRole: string, res: Response) {
 		const isUserExists = await UserModel.findOne({ email, userRole });
 		if (!isUserExists) throw new HttpException(400, 'Email not exists');
 		const passwordValid = await bcrypt.compare(password, isUserExists.password);
 		if (!!passwordValid) {
-			const userToken = await UtilsMain.JWTSignup({ email: isUserExists.email, role: isUserExists.userRole, _id: isUserExists._id });
-			console.log('userToken: ', userToken);
+			const userToken = await UtilsMain.JWTSignup({ res, email: isUserExists.email, role: isUserExists.userRole, _id: isUserExists._id });
 			let userDetails: any = JSON.parse(JSON.stringify(isUserExists));
 			delete userDetails.password;
 
@@ -72,7 +73,7 @@ export class UserService {
 	static async forgotPasswordService(email: string, userRole: string): Promise<boolean> {
 		const isUserExists = await UserModel.findOne({ email, userRole });
 		if (!isUserExists) throw new HttpException(400, 'user not  exists');
-		const expiresIn: any = process.env.JWT_EXPIRES;
+		const expiresIn: any = process.env.JWT_ACCESS_TOKEN_EXPIRES;
 		const expiration = new Date();
 		expiration.setTime(expiration.getTime() + expiresIn * 1000);
 		const token = randomBytes(3).toString('hex');
@@ -129,7 +130,7 @@ export class UserService {
 	static async changeEmailRequestService(email: string, userRole: string): Promise<boolean> {
 		const isUserExists = await UserModel.findOne({ email, userRole });
 		if (!isUserExists) throw new HttpException(400, 'user not  exists');
-		const expiresIn: any = process.env.JWT_EXPIRES;
+		const expiresIn: any = process.env.JWT_ACCESS_TOKEN_EXPIRES;
 		const expiration = new Date();
 		expiration.setTime(expiration.getTime() + expiresIn * 1000);
 		const token = randomBytes(3).toString('hex');
@@ -187,7 +188,7 @@ export class UserService {
 		const token = randomBytes(3).toString('hex');
 		const isUserExists = await UserModel.findOne({ email, userRole }).select('-password');
 		if (!isUserExists) throw new HttpException(400, 'Email is not found');
-		const expiresIn: any = process.env.JWT_EXPIRES;
+		const expiresIn: any = process.env.JWT_ACCESS_TOKEN_EXPIRES;
 		const expiration = new Date();
 		expiration.setTime(expiration.getTime() + expiresIn * 1000);
 		const mailOptions: SendMailOptions = {

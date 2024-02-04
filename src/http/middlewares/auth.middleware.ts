@@ -8,11 +8,6 @@ const AuthMiddleware = (userRole?: IUserRole | IUserRole[]) => async (req: Reque
 			const userToken = req.headers.authorization.split(' ')[1];
 			if (userToken) {
 				const decoded = JWT.verify(userToken, process.env.JWT_SECRET!) as AuthJWTPayload;
-				// token expiration check
-				if (new Date().getTime() > new Date(decoded.expiration).getTime())
-					return res.status(403).json({
-						message: 'Token expired'
-					});
 
 				// authorization check
 				if (
