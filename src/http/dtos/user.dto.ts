@@ -111,5 +111,6 @@ export class UpdateUserProfileDTO {
 	name: string | undefined;
 	@IsString()
 	@IsOptional()
+	@Trim()
 	avatar: string | undefined;
 }
