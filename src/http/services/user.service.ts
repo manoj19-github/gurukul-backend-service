@@ -6,11 +6,9 @@ import UserModel, { IUserRole, IUserSchema } from '../../schema/user.schema';
 import { UtilsMain } from '../../utils';
 import { HttpException } from '../exceptions/http.exceptions';
 import { Response } from 'express';
-import { AuthJWTPayload, AuthToken, ITokenOptions, UpdateAuthToken } from '../../interfaces/auth.interface';
+import { AuthJWTPayload, AuthToken, ITokenOptions, UpdateAuthToken, UpdateUserProfileInterface } from '../../interfaces/auth.interface';
 import JWT from 'jsonwebtoken';
 import { redis } from '../../config/redis.config';
-import moment from 'moment';
-import { ClientSession } from 'mongoose';
 export class UserService {
 	/***
 	 * Register service of user
@@ -328,5 +326,21 @@ export class UserService {
 		const isEmailExists = await UserModel.findOne({ email, userRole });
 		if (!isEmailExists) await UserService.registerService(name, email, password, avatar, userRole);
 		return await UserService.loginService(email, password, userRole, res);
+	}
+
+	/***
+	 * update user profile service
+	 * @param {UpdateUserProfileInterface} userDetails
+	 * @param {string} userId
+	 * @returns {Promise<IUserSchema | undefined>}
+	 * @memberof UserService
+	 **/
+
+	static async updateUserProfileService(userDetails: UpdateUserProfileInterface, userId: string) {
+		if (userId.trim().length === 0) throw new HttpException(400, 'user id not found');
+		if (!userDetails || Object.keys(userDetails).length === 0) throw new HttpException(400, 'updatable details not found');
+		const updatedUserDetails = await UserModel.findOneAndUpdate({ _id: userId }, { $set: { ...userDetails } }, { returnDocument: 'after' });
+		await redis.set(userId, JSON.stringify({ email: updatedUserDetails?.email, role: updatedUserDetails?.userRole }));
+		return updatedUserDetails;
 	}
 }

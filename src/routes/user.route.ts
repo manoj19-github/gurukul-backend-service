@@ -5,6 +5,7 @@ import {
 	RegistrationDTO,
 	ResetEmailDTO,
 	ResetPasswordDTO,
+	UpdateUserProfileDTO,
 	ValidateEmailDTO
 } from '../http/dtos/user.dto';
 import { Router } from 'express';
@@ -40,6 +41,12 @@ export class UserRoute implements Routes {
 			AuthMiddleware(),
 			DTOValidationMiddleware(ValidateEmailDTO),
 			this.userCTRL.validateEmail
+		);
+		this.router.post(
+			`${this.path}/updateuserprofile`,
+			AuthMiddleware(),
+			DTOValidationMiddleware(UpdateUserProfileDTO),
+			this.userCTRL.updateUserProfile
 		);
 		this.router.get(`${this.path}/logout`, AuthMiddleware(), this.userCTRL.logoutUser);
 		this.router.get(`${this.path}/refreshtoken`, AuthMiddleware(), this.userCTRL.updateAccessToken);

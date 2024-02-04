@@ -50,3 +50,8 @@ export interface GenerateAuthTokenResponse {
 	refreshToken: string;
 	refreshTokenExpiresDate: Date;
 }
+
+export interface UpdateUserProfileInterface {
+	avatar?: string;
+	name?: string;
+}

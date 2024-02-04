@@ -103,3 +103,13 @@ export class ResetEmailDTO {
 	code: string | undefined;
 }
 
+export class UpdateUserProfileDTO {
+	@IsString()
+	@Trim()
+	@IsOptional()
+	@MinLength(5, { message: 'FirstName should be minimum of 5 characters' })
+	name: string | undefined;
+	@IsString()
+	@IsOptional()
+	avatar: string | undefined;
+}

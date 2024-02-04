@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { UserService } from '../services/user.service';
 import { redis } from '../../config/redis.config';
-import { RequestWithUser } from '../../interfaces/auth.interface';
+import { RequestWithUser, UpdateUserProfileInterface } from '../../interfaces/auth.interface';
 import { HttpException } from '../exceptions/http.exceptions';
 import UserModel from '../../schema/user.schema';
 
@@ -146,6 +146,17 @@ export class UserController {
 			console.log('error : ', error);
 			// await session.abortTransaction();
 			// await session.endSession();
+			next(error);
+		}
+	}
+	async updateUserProfile(req: RequestWithUser, res: Response, next: NextFunction) {
+		try {
+			const body = req.body as UpdateUserProfileInterface;
+			const userID = req.user?._id || '';
+			const updatedUserDetails = await UserService.updateUserProfileService(body, userID);
+			return res.status(200).json({ user: updatedUserDetails });
+		} catch (error: any) {
+			console.log(error);
 			next(error);
 		}
 	}
