@@ -12,7 +12,7 @@ export class UtilsMain {
 		return expression.test(email);
 	}
 	static async JWTSignup({ res, email, role, _id }: { res: Response; email: string; role: string; _id: any }): Promise<AuthToken> {
-		const accessTokenExpiresIn: any = process.env.JWT_ACCESS_TOKEN_EXPIRES || '5m';
+		const accessTokenExpiresIn: any = process.env.JWT_ACCESS_TOKEN_EXPIRES || '3h';
 		const refreshTokenExpiresIn: any = process.env.JWT_REFRESH_TOKEN_EXPIRES || '31d';
 
 		const generateAuthTokenDetails = await UtilsMain.generateAuthToken({ email, role, _id, accessTokenExpiresIn, refreshTokenExpiresIn });

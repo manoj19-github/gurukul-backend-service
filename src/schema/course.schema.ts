@@ -1,5 +1,6 @@
 import { ObjectType } from './../../node_modules/typescript/lib/typescript.d';
 import { Document, Model, Mongoose, Schema, model } from 'mongoose';
+import { IUserSchema } from './user.schema';
 
 export interface IComments extends Document {
 	user: object;
@@ -17,17 +18,18 @@ export interface ILink extends Document {
 	title: string;
 	url: string;
 }
-export interface ICourseData extends Document {
+export interface ICourseVideos extends Document {
 	title: string;
 	description: string;
 	videoURL: string;
 	videoThumbnail: string;
 	videoSection: string;
-	videoLength: number;
+	videoLength: string;
 	videoPlayer: string;
 	links: ILink[];
 	suggestion: string;
 	questions: IComments[];
+	courseData: ICourse | object;
 }
 
 export interface ICourse extends Document {
@@ -41,10 +43,11 @@ export interface ICourse extends Document {
 	demoUrl: string;
 	benefits: { title: string }[];
 	reviews: IReview[];
-	courseData: ICourseData[];
+	courseVideos: ICourseVideos[];
 	ratings: number;
 	purchased?: number;
-	prerequisites: { title: string }[];
+	prerequists: { title: string }[];
+	creator?: IUserSchema;
 }
 export const reviewSchema: Schema<IReview> = new Schema({
 	user: {
@@ -83,14 +86,18 @@ export const commentSchema: Schema<IComments> = new Schema({
 		}
 	]
 });
-export const courseDataSchema: Schema<ICourseData> = new Schema({
+export const CourseVideosSchema: Schema<ICourseVideos> = new Schema({
 	videoURL: String,
 	videoThumbnail: String,
 	title: String,
 	videoSection: String,
 	description: String,
 	videoPlayer: String,
-	videoLength: Number,
+	videoLength: String,
+	courseData: {
+		type: Schema.Types.ObjectId,
+		ref: 'Course'
+	},
 	links: [
 		{
 			type: Schema.Types.ObjectId,
@@ -137,17 +144,17 @@ export const courseSchema: Schema<ICourse> = new Schema({
 		required: true
 	},
 	benefits: [{ title: String }],
-	prerequisites: [{ title: String }],
+	prerequists: [{ title: String }],
 	reviews: [
 		{
 			type: Schema.Types.ObjectId,
 			ref: 'Review'
 		}
 	],
-	courseData: [
+	courseVideos: [
 		{
 			type: Schema.Types.ObjectId,
-			ref: 'CourseData'
+			ref: 'CourseVideos'
 		}
 	],
 	ratings: {
@@ -157,11 +164,15 @@ export const courseSchema: Schema<ICourse> = new Schema({
 	purchased: {
 		type: Number,
 		default: 0
+	},
+	creator: {
+		type: Schema.Types.ObjectId,
+		ref: 'User'
 	}
 });
 
 export const CourseModel: Model<ICourse> = model('Course', courseSchema);
-export const CourseDataModel: Model<ICourseData> = model('CourseData', courseDataSchema);
+export const CourseVideosModel: Model<ICourseVideos> = model('CourseVideos', CourseVideosSchema);
 export const ReviewModel: Model<IReview> = model('Review', reviewSchema);
 export const LinkModel: Model<ILink> = model('Link', linkSchema);
 export const CommentSchema: Model<IComments> = model('Comment', commentSchema);
