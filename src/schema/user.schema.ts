@@ -10,7 +10,7 @@ export interface TokenVerification {
 	token: string;
 	expiration: Date;
 }
-export interface IUserSchema {
+export interface IUserSchema extends Document {
 	name: string;
 	email: string;
 	userRole: string;

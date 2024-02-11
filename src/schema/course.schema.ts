@@ -1,4 +1,3 @@
-import { ObjectType } from './../../node_modules/typescript/lib/typescript.d';
 import { Document, Model, Mongoose, Schema, model } from 'mongoose';
 import { IUserSchema } from './user.schema';
 import { ICategories, ILevel, ISubCategories, ITopics } from './master.schema';

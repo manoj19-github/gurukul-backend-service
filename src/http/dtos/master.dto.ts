@@ -10,3 +10,33 @@ export class CreateCategoryDTO {
 	@IsOptional()
 	category_id?: string;
 }
+export class DeleteCategoryDTO {
+	@IsString()
+	@IsNotEmpty()
+	category_id?: string;
+	@IsString()
+	@IsNotEmpty()
+	assignable_category_id?: string;
+}
+
+export class CreateSubCategoryDTO {
+	@IsString()
+	@Trim()
+	@IsNotEmpty()
+	name?: string;
+	@IsString()
+	@IsOptional()
+	category?: string;
+	@IsString()
+	@IsOptional()
+	sub_category_id?: string;
+}
+
+export class DeleteSubCategoryDTO {
+	@IsString()
+	@IsNotEmpty()
+	sub_category_id?: string;
+	@IsString()
+	@IsNotEmpty()
+	assignable_sub_category_id?: string;
+}

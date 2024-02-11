@@ -13,7 +13,7 @@ const AuthMiddleware = (userRole?: IUserRole | IUserRole[]) => async (req: Reque
 				const decoded = JWT.verify(userToken, process.env.JWT_SECRET!) as AuthJWTPayload;
 				if (!decoded)
 					return res.status(403).json({
-						message: 'access token is not valid '
+						message: 'access token is not valid  or token timeout'
 					});
 
 				// authorization check
