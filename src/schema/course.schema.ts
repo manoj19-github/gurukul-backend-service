@@ -1,6 +1,7 @@
 import { ObjectType } from './../../node_modules/typescript/lib/typescript.d';
 import { Document, Model, Mongoose, Schema, model } from 'mongoose';
 import { IUserSchema } from './user.schema';
+import { ICategories, ILevel, ISubCategories, ITopics } from './master.schema';
 
 export interface IComments extends Document {
 	user: object;
@@ -39,7 +40,7 @@ export interface ICourse extends Document {
 	estimatedPrice: number;
 	thumbnail: string;
 	tags: string;
-	level: string;
+	level: ILevel;
 	demoUrl: string;
 	benefits: { title: string }[];
 	reviews: IReview[];
@@ -48,6 +49,9 @@ export interface ICourse extends Document {
 	purchased?: number;
 	prerequists: { title: string }[];
 	creator?: IUserSchema;
+	category: ICategories;
+	subCategory: ISubCategories;
+	topics: ITopics;
 }
 export const reviewSchema: Schema<IReview> = new Schema({
 	user: {
@@ -136,8 +140,8 @@ export const courseSchema: Schema<ICourse> = new Schema({
 		required: true
 	},
 	level: {
-		type: String,
-		required: true
+		type: Schema.Types.ObjectId,
+		ref: 'Level'
 	},
 	demoUrl: {
 		type: String,
@@ -168,6 +172,18 @@ export const courseSchema: Schema<ICourse> = new Schema({
 	creator: {
 		type: Schema.Types.ObjectId,
 		ref: 'User'
+	},
+	category: {
+		type: Schema.Types.ObjectId,
+		ref: 'Categories'
+	},
+	subCategory: {
+		type: Schema.Types.ObjectId,
+		ref: 'SubCategories'
+	},
+	topics: {
+		type: Schema.Types.ObjectId,
+		ref: 'Topics'
 	}
 });
 

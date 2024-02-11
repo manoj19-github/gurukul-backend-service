@@ -35,6 +35,15 @@ export class UploadCourseDto {
 	estimatedPrice?: number;
 	@IsString()
 	@IsNotEmpty()
+	category?: string;
+	@IsString()
+	@IsNotEmpty()
+	subCategory?: string;
+	@IsString()
+	@IsNotEmpty()
+	topic?: string;
+	@IsString()
+	@IsNotEmpty()
 	thumbnail?: string;
 	@IsString()
 	@IsNotEmpty()
