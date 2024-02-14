@@ -71,4 +71,14 @@ export class CourseController {
 			next(error);
 		}
 	}
+	async getCourseWithoutPurchasing(req: Request, res: Response, next: NextFunction) {
+		try {
+			const courseId: any = req.params?.courseId;
+			const response = await CourseService.getCourseByIdWithoutPurchasing(courseId);
+			return res.status(200).json({ message: 'get course successfully', response });
+		} catch (error: any) {
+			console.log(error);
+			next(error);
+		}
+	}
 }
