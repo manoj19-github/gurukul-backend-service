@@ -3,6 +3,7 @@ import { CourseVideosModel, CourseModel, ICourse, ICourseVideos } from './../../
 import { ClientSession, ObjectId } from 'mongoose';
 import { CourseVideosDTO, DeleteCourseVideoDTO, UploadCourseDto } from '../dtos/course.dto';
 import { HttpException } from '../exceptions/http.exceptions';
+import { redis } from '../../config/redis.config';
 
 export class CourseService {
 	/***
@@ -108,6 +109,29 @@ export class CourseService {
 		const payload: any = JSON.parse(JSON.stringify(editCourseMetaDetails));
 		if (payload?.courseId) delete payload.courseId;
 		await CourseModel.updateOne({ _id: editCourseMetaDetails.courseId }, { $set: { ...payload } });
+		const courseDetails = await CourseModel.findById(editCourseMetaDetails.courseId).select('-courseVideos');
+		await redis.set(String(editCourseMetaDetails.courseId), JSON.stringify(courseDetails));
 		return await CourseModel.findById(editCourseMetaDetails.courseId).populate('courseVideos');
+	}
+	/***
+	* Get course  by id without purchasing
+	* @param {string | undefined} courseId
+	  @memberof CourseService
+	**/
+	static async getCourseByIdWithoutPurchasing(courseId?: string) {
+		if (courseId) {
+			const isRedisCacheExists = await redis.get(courseId);
+			if (!!isRedisCacheExists) return JSON.parse(isRedisCacheExists);
+			const courseDetails = await CourseModel.findById(courseId).select('-courseVideos');
+			await redis.set(courseId, JSON.stringify(courseDetails));
+			return courseDetails;
+		}
+
+		const isCoursesCacheExists = await redis.get('allCourses');
+		if (!!isCoursesCacheExists) return JSON.parse(isCoursesCacheExists);
+
+		const courses = await CourseModel.find().select('-courseVideos');
+		await redis.set('allCourses', JSON.stringify(courses), 'EX', 120); // redis stores courses for 120 seconds
+		return courses;
 	}
 }

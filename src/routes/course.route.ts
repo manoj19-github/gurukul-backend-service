@@ -40,6 +40,7 @@ export class CourseRoute implements Routes {
 			AuthMiddleware([IUserRole.ADMIN, IUserRole.TEACHER]),
 			this.courseCTRL.editCourseMetaDetails
 		);
+		this.router.get(`${this.path}/coursewithoutpurchasing/:courseId?`, this.courseCTRL.getCourseWithoutPurchasing);
 
 	}
 }

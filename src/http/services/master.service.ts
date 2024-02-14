@@ -1,10 +1,50 @@
-import { CreateTopicsDTO } from './../dtos/master.dto';
-import { ICategories, ISubCategories, SubCategoriesModel, TopicsModel, ITopics } from './../../schema/master.schema';
+import { CreateTopicsDTO, LevelDTO } from './../dtos/master.dto';
+import { ICategories, ISubCategories, SubCategoriesModel, TopicsModel, ITopics, ILevel, LevelModel } from './../../schema/master.schema';
 import { CategoriesModel } from '../../schema/master.schema';
 import { CreateSubCategoryDTO, DeleteSubCategoryDTO } from '../dtos/master.dto';
 import { ClientSession } from 'mongoose';
+import { HttpException } from '../exceptions/http.exceptions';
 
 export class MasterService {
+	/**
+	 * get  levels
+	 * @param {string | undefined} levelId
+	 * @returns {ILevel[] | ILevel}
+	 * @memberof MasterService
+	 *
+	 * ***/
+	static async getLevelsService(levelId?: string) {
+		if (levelId) return await LevelModel.findById(levelId);
+		return await LevelModel.find();
+	}
+
+	/**
+	 * delete level by id
+	 * @param {string} levelId
+	 * @returns {ILevel[]}
+	 * @memberof MasterService
+	 * ***/
+	static async deleteLevelService(levelId: string) {
+		if (!levelId || levelId.trim() === '') throw new HttpException(400, 'level Id not found');
+		await LevelModel.deleteOne({ _id: levelId });
+		return await MasterService.getLevelsService();
+	}
+
+	/**
+	 * create/ edit level
+	 * @param {LevelDTO} levelPayload
+	 * @returns {ILevel[]}
+	 * @memberof MasterService
+	 * ***/
+	static async createLevelService(levelPayload: LevelDTO) {
+		if (levelPayload?.level_id) {
+			await LevelModel.updateOne({ _id: levelPayload.level_id }, { $set: { name: levelPayload.name } });
+		} else {
+			await LevelModel.create({ ...levelPayload });
+		}
+		return await LevelModel.find();
+	}
+
 	/**
 	 * Create or Edit category
 	 * @param {string | undefined } category_id

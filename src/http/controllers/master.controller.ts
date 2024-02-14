@@ -7,9 +7,11 @@ import {
 	CreateTopicsDTO,
 	DeleteCategoryDTO,
 	DeleteSubCategoryDTO,
-	DeleteTopicsDTO
+	DeleteTopicsDTO,
+	LevelDTO
 } from '../dtos/master.dto';
 import mongoose from 'mongoose';
+import { HttpException } from '../exceptions/http.exceptions';
 
 export class MasterController {
 	async createCategory(req: RequestWithUser, res: Response, next: NextFunction) {
@@ -129,6 +131,46 @@ export class MasterController {
 			return res.status(200).json({
 				message: 'Master details found',
 				masterDetails: hierachyDetails
+			});
+		} catch (error) {
+			console.log(error);
+			next(error);
+		}
+	}
+	async createLevel(req: RequestWithUser, res: Response, next: NextFunction) {
+		try {
+			const body = req.body as LevelDTO;
+			const response = await MasterService.createLevelService(body);
+			return res.status(200).json({
+				message: 'level created or updated',
+				response
+			});
+		} catch (error) {
+			console.log(error);
+			next(error);
+		}
+	}
+	async getLevels(req: Request, res: Response, next: NextFunction) {
+		try {
+			const levelId = req.params?.levelId;
+			const response = await MasterService.getLevelsService(levelId);
+			return res.status(200).json({
+				message: 'levels found',
+				response
+			});
+		} catch (error) {
+			console.log(error);
+			next(error);
+		}
+	}
+	async deleteLevel(req: RequestWithUser, res: Response, next: NextFunction) {
+		try {
+			const body = req.body;
+			if (!body.levelId) throw new HttpException(400, 'Level Id not found');
+			const response = await MasterService.deleteLevelService(body.levelId);
+			return res.status(200).json({
+				message: 'levels found',
+				response
 			});
 		} catch (error) {
 			console.log(error);

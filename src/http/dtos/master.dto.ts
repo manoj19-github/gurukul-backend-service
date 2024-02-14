@@ -58,3 +58,12 @@ export class DeleteTopicsDTO {
 	@IsNotEmpty()
 	topic_id?: string;
 }
+
+export class LevelDTO {
+	@IsString()
+	@IsNotEmpty()
+	name?: string;
+	@IsOptional()
+	@IsString()
+	level_id?: string;
+}

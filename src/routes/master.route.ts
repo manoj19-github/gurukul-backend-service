@@ -11,7 +11,8 @@ import {
 	CreateTopicsDTO,
 	DeleteCategoryDTO,
 	DeleteSubCategoryDTO,
-	DeleteTopicsDTO
+	DeleteTopicsDTO,
+	LevelDTO
 } from '../http/dtos/master.dto';
 import { MasterController } from '../http/controllers/master.controller';
 
@@ -65,6 +66,14 @@ export class MasterRoute implements Routes {
 			this.masterCTRL.deleteTopics
 		);
 		this.router.get(`${this.path}/masterhierarchy`, this.masterCTRL.getMasterHierarchy);
+		this.router.post(
+			`${this.path}/createlevel`,
+			DTOValidationMiddleware(LevelDTO),
+			AuthMiddleware(IUserRole.ADMIN),
+			this.masterCTRL.createLevel
+		);
+		this.router.delete(`${this.path}/deletelevel`, AuthMiddleware(IUserRole.ADMIN), this.masterCTRL.deleteLevel);
+		this.router.get(`${this.path}/getlevels:levelId?`, this.masterCTRL.getLevels);
 
 	}
 }
