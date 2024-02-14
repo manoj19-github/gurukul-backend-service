@@ -2,7 +2,7 @@ import { Router } from 'express';
 import DTOValidationMiddleware from '../http/middlewares/apiValidator.middleware';
 import { Routes } from '../interfaces/routes.interface';
 import AuthMiddleware from '../http/middlewares/auth.middleware';
-import { UploadCourseDto } from '../http/dtos/course.dto';
+import { CourseVideosDTO, DeleteCourseVideoDTO, EditCourseMeataDetailsDTO, UploadCourseDto } from '../http/dtos/course.dto';
 import { CourseController } from '../http/controllers/course.controller';
 import { IUserRole } from '../schema/user.schema';
 
@@ -22,5 +22,24 @@ export class CourseRoute implements Routes {
 			AuthMiddleware([IUserRole.ADMIN, IUserRole.TEACHER]),
 			this.courseCTRL.uploadCourse
 		);
+		this.router.post(
+			`${this.path}/assignvideos`,
+			DTOValidationMiddleware(CourseVideosDTO),
+			AuthMiddleware([IUserRole.ADMIN, IUserRole.TEACHER]),
+			this.courseCTRL.assignCourseVideos
+		);
+		this.router.delete(
+			`${this.path}/deletecoursevideos`,
+			DTOValidationMiddleware(DeleteCourseVideoDTO),
+			AuthMiddleware([IUserRole.ADMIN, IUserRole.TEACHER]),
+			this.courseCTRL.deleteCourseVideos
+		);
+		this.router.post(
+			`${this.path}/editcourse`,
+			DTOValidationMiddleware(EditCourseMeataDetailsDTO),
+			AuthMiddleware([IUserRole.ADMIN, IUserRole.TEACHER]),
+			this.courseCTRL.editCourseMetaDetails
+		);
+
 	}
 }

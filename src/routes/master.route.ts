@@ -5,7 +5,14 @@ import AuthMiddleware from '../http/middlewares/auth.middleware';
 import { UploadCourseDto } from '../http/dtos/course.dto';
 import { CourseController } from '../http/controllers/course.controller';
 import { IUserRole } from '../schema/user.schema';
-import { CreateCategoryDTO, CreateSubCategoryDTO, DeleteCategoryDTO, DeleteSubCategoryDTO } from '../http/dtos/master.dto';
+import {
+	CreateCategoryDTO,
+	CreateSubCategoryDTO,
+	CreateTopicsDTO,
+	DeleteCategoryDTO,
+	DeleteSubCategoryDTO,
+	DeleteTopicsDTO
+} from '../http/dtos/master.dto';
 import { MasterController } from '../http/controllers/master.controller';
 
 export class MasterRoute implements Routes {
@@ -44,5 +51,20 @@ export class MasterRoute implements Routes {
 			AuthMiddleware(IUserRole.ADMIN),
 			this.masterCTRL.deleteSubCategory
 		);
+		this.router.post(
+			`${this.path}/topics`,
+			DTOValidationMiddleware(CreateTopicsDTO),
+			AuthMiddleware(IUserRole.ADMIN),
+			this.masterCTRL.createTopics
+		);
+		this.router.get(`${this.path}/topics/:topic_id?`, this.masterCTRL.getTopics);
+		this.router.delete(
+			`${this.path}/topics`,
+			DTOValidationMiddleware(DeleteTopicsDTO),
+			AuthMiddleware(IUserRole.ADMIN),
+			this.masterCTRL.deleteTopics
+		);
+		this.router.get(`${this.path}/masterhierarchy`, this.masterCTRL.getMasterHierarchy);
+
 	}
 }

@@ -94,4 +94,68 @@ export class CourseVideosDTO {
 	@IsString()
 	@IsOptional()
 	courseId?: string;
+	@IsString()
+	@IsOptional()
+	courseVideoId?: string;
+}
+
+
+export class DeleteCourseVideoDTO {
+	@IsString()
+	@IsNotEmpty()
+	courseId?: string;
+	@IsString()
+	@IsNotEmpty()
+	courseVideoId?: string;
+}
+
+export class EditCourseMeataDetailsDTO {
+	@IsString()
+	@IsNotEmpty()
+	@MaxLength(40)
+	@MinLength(5)
+	name: string | undefined;
+	@IsString()
+	@IsNotEmpty()
+	@MaxLength(1000)
+	@MinLength(10)
+	description: string | undefined;
+	@IsNumber()
+	@IsPositive()
+	@Max(10000)
+	@Min(300)
+	price?: number;
+	@IsNumber()
+	@IsPositive()
+	estimatedPrice?: number;
+	@IsString()
+	@IsNotEmpty()
+	category?: string;
+	@IsString()
+	@IsNotEmpty()
+	subCategory?: string;
+	@IsString()
+	@IsNotEmpty()
+	topic?: string;
+	@IsString()
+	@IsNotEmpty()
+	thumbnail?: string;
+	@IsString()
+	@IsNotEmpty()
+	tags?: string;
+	@IsString()
+	@IsNotEmpty()
+	level?: string;
+	@IsString()
+	@IsNotEmpty()
+	demoUrl?: string;
+	@IsArray()
+	@IsNotEmpty()
+	benefits?: { title: string }[];
+	@IsArray()
+	@IsNotEmpty()
+	prerequists?: { title: string }[];
+	@IsString()
+	@IsNotEmpty()
+	courseId?: string;
 }

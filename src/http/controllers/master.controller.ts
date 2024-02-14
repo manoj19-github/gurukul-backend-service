@@ -1,7 +1,14 @@
 import { RequestWithUser } from '../../interfaces/auth.interface';
 import { NextFunction, Response, Request } from 'express';
 import { MasterService } from '../services/master.service';
-import { CreateCategoryDTO, CreateSubCategoryDTO, DeleteCategoryDTO, DeleteSubCategoryDTO } from '../dtos/master.dto';
+import {
+	CreateCategoryDTO,
+	CreateSubCategoryDTO,
+	CreateTopicsDTO,
+	DeleteCategoryDTO,
+	DeleteSubCategoryDTO,
+	DeleteTopicsDTO
+} from '../dtos/master.dto';
 import mongoose from 'mongoose';
 
 export class MasterController {
@@ -73,6 +80,58 @@ export class MasterController {
 			return res.status(200).json({ message: `sub category's found`, sub_categories });
 		} catch (error) {
 			console.log('error : ', error);
+			next(error);
+		}
+	}
+	async createTopics(req: RequestWithUser, res: Response, next: NextFunction) {
+		try {
+			const body = req.body as CreateTopicsDTO;
+			const topics = await MasterService.createTopicService(body);
+			return res.status(200).json({
+				message: 'Topics created',
+				topics
+			});
+		} catch (error) {
+			console.log(error);
+			next(error);
+		}
+	}
+	async getTopics(req: Request, res: Response, next: NextFunction) {
+		try {
+			const topic_id = req.params?.topic_id;
+			const topics = await MasterService.getTopics(topic_id);
+			return res.status(200).json({
+				message: 'Topics found',
+				topics
+			});
+		} catch (error) {
+			console.log(error);
+			next(error);
+		}
+	}
+	async deleteTopics(req: RequestWithUser, res: Response, next: NextFunction) {
+		try {
+			const body = req.body as DeleteTopicsDTO;
+			const topics = await MasterService.deleteTopicService(String(body.topic_id));
+			return res.status(200).json({
+				message: 'Topics deleted',
+				topics
+			});
+		} catch (error) {
+			console.log(error);
+			next(error);
+		}
+	}
+	async getMasterHierarchy(req: Request, res: Response, next: NextFunction) {
+		try {
+			const hierachyDetails = await MasterService.getMasterDetailsHierachyService();
+			console.log('hierachyDetails: ', hierachyDetails);
+			return res.status(200).json({
+				message: 'Master details found',
+				masterDetails: hierachyDetails
+			});
+		} catch (error) {
+			console.log(error);
 			next(error);
 		}
 	}

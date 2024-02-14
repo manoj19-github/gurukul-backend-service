@@ -40,3 +40,21 @@ export class DeleteSubCategoryDTO {
 	@IsNotEmpty()
 	assignable_sub_category_id?: string;
 }
+
+export class CreateTopicsDTO {
+	@IsString()
+	@Trim()
+	@IsNotEmpty()
+	name?: string;
+	@IsString()
+	@IsNotEmpty()
+	subCategory?: string;
+	@IsString()
+	@IsOptional()
+	topic_id?: string;
+}
+export class DeleteTopicsDTO {
+	@IsString()
+	@IsNotEmpty()
+	topic_id?: string;
+}

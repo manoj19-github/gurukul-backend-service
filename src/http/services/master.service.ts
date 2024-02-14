@@ -1,4 +1,5 @@
-import { ICategories, ISubCategories, SubCategoriesModel, TopicsModel } from './../../schema/master.schema';
+import { CreateTopicsDTO } from './../dtos/master.dto';
+import { ICategories, ISubCategories, SubCategoriesModel, TopicsModel, ITopics } from './../../schema/master.schema';
 import { CategoriesModel } from '../../schema/master.schema';
 import { CreateSubCategoryDTO, DeleteSubCategoryDTO } from '../dtos/master.dto';
 import { ClientSession } from 'mongoose';
@@ -12,7 +13,12 @@ export class MasterService {
 	 *
 	 * ***/
 	static async updateOrCreateCategoryService(category_name: string, category_id?: string) {
-		await CategoriesModel.updateOne({ _id: category_id }, { $set: { name: category_name } }, { returnDocument: 'after', upsert: true });
+		if (!!category_id) {
+			await CategoriesModel.updateOne({ _id: category_id }, { $set: { name: category_name } });
+		} else {
+			await CategoriesModel.create({ name: category_name });
+		}
+
 		return await CategoriesModel.find();
 	}
 	/**
@@ -49,7 +55,16 @@ export class MasterService {
 	static async createSubCategory(subCategoryPayload: CreateSubCategoryDTO) {
 		const payload: any = { name: subCategoryPayload.name };
 		if (subCategoryPayload.category) payload.category = subCategoryPayload.category;
-		await SubCategoriesModel.updateOne({ _id: subCategoryPayload.sub_category_id }, { $set: { ...payload } }, { upsert: true });
+		if (!!subCategoryPayload.sub_category_id) {
+			const updatedSubCategories = await SubCategoriesModel.updateOne(
+				{ _id: subCategoryPayload.sub_category_id },
+				{ $set: { ...payload } },
+				{ returnDocument: 'after' }
+			);
+			console.log('updatedSubCategories: ', updatedSubCategories);
+		} else {
+			await SubCategoriesModel.create({ ...payload });
+		}
 		return await SubCategoriesModel.find().populate('category');
 	}
 
@@ -61,13 +76,14 @@ export class MasterService {
 	 * @memberof MasterService
 	 * **/
 	static async deleteSubCategoryService(subCategoryPayload: DeleteSubCategoryDTO, session: ClientSession) {
-		await SubCategoriesModel.deleteOne({ _id: subCategoryPayload.sub_category_id }, { session });
 		// replace topics which are attached with this deleted sub category to any other sub category
 		await TopicsModel.updateMany(
 			{ subCategories: subCategoryPayload.sub_category_id },
 			{ $set: { subCategories: subCategoryPayload.assignable_sub_category_id } },
 			{ session }
 		);
+		await SubCategoriesModel.deleteOne({ _id: subCategoryPayload.sub_category_id }, { session });
+
 		await session.commitTransaction();
 		await session.endSession();
 		return await SubCategoriesModel.find().populate('category');
@@ -83,5 +99,83 @@ export class MasterService {
 			return await SubCategoriesModel.findById(sub_category_id).populate('category');
 		}
 		return await SubCategoriesModel.find().populate('category');
+	}
+	/**
+	 * create topics
+	 * @param {CreateTopicsDTO} topicsPayload
+	 * @return {ITopics[]}
+	 * @memberof MasterService
+	 * **/
+	static async createTopicService(topicsPayload: CreateTopicsDTO) {
+		const payload: any = { name: topicsPayload.name };
+		if (topicsPayload.subCategory) {
+			payload.subCategories = topicsPayload.subCategory;
+		}
+		if (topicsPayload.topic_id) {
+			await TopicsModel.updateOne({ _id: topicsPayload.topic_id }, { ...payload });
+		} else {
+			await TopicsModel.create({ ...payload });
+		}
+		return TopicsModel.find().populate({
+			path: 'subCategories',
+			model: 'SubCategories',
+			populate: { path: 'category', model: 'Categories' }
+		});
+	}
+	/**
+	 * delete topic
+	 * @param {string} topic_id
+	 * @return {ITopics[]}
+	 * @memberof MasterService
+	 * **/
+	static async deleteTopicService(topic_id: string) {
+		await TopicsModel.deleteOne({ _id: topic_id });
+		return TopicsModel.find().populate({
+			path: 'subCategories',
+			model: 'SubCategories',
+			populate: { path: 'category', model: 'Categories' }
+		});
+	}
+
+	/**
+	 * get topic
+	 * @param {string | undefined} topic_id
+	 * @return {ITopics[] | ITopics}
+	 * @memberof MasterService
+	 * **/
+	static async getTopics(topic_id?: string) {
+		if (!!topic_id) {
+			return await TopicsModel.findById(topic_id).populate({
+				path: 'subCategories',
+				model: 'SubCategories',
+				populate: { path: 'category', model: 'Categories' }
+			});
+		}
+		return await TopicsModel.find().populate({
+			path: 'subCategories',
+			model: 'SubCategories',
+			populate: { path: 'category', model: 'Categories' }
+		});
+	}
+
+	/**
+	 * get category, sub category and topics
+	 * @memberof MasterService
+	 * **/
+	static async getMasterDetailsHierachyService() {
+		const categories = await CategoriesModel.find();
+		const subCategories = await SubCategoriesModel.find();
+		const topics = await TopicsModel.find();
+		const categoriesWithSubCategories = categories.map((category: any) => {
+			const subCategoriesWithTopics = subCategories.map((subCategory: any) => {
+				const details = JSON.parse(JSON.stringify(subCategory));
+				details.topics = topics.filter((self) => self.subCategories.map(String).includes(String(subCategory._id)));
+				return details;
+			});
+			const catDetails = JSON.parse(JSON.stringify(category));
+			catDetails.subCategory = subCategoriesWithTopics.find((self) => String(self.category) === String(category._id));
+			return catDetails;
+		});
+		return categoriesWithSubCategories;
 	}
 }

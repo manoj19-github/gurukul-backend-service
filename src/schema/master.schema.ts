@@ -15,6 +15,15 @@ export interface ILevel extends Document {
 	name: string;
 }
 
+export const LevelSchema: Schema<ILevel> = new Schema({
+	name: {
+		type: String,
+		required: true,
+		trim: true,
+		unique: true
+	}
+});
+
 export const categoriesSchema: Schema<ICategories> = new Schema({
 	name: {
 		type: String,
@@ -49,15 +58,6 @@ export const topicsSchema: Schema<ITopics> = new Schema({
 			ref: 'SubCategories'
 		}
 	]
-});
-
-export const LevelSchema: Schema<ILevel> = new Schema({
-	name: {
-		type: String,
-		required: true,
-		trim: true,
-		unique: true
-	}
 });
 
 export const CategoriesModel: Model<ICategories> = model('Categories', categoriesSchema);
