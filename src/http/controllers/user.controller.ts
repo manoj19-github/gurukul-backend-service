@@ -3,7 +3,8 @@ import { UserService } from '../services/user.service';
 import { redis } from '../../config/redis.config';
 import { RequestWithUser, UpdateUserProfileInterface } from '../../interfaces/auth.interface';
 import { HttpException } from '../exceptions/http.exceptions';
-import UserModel from '../../schema/user.schema';
+import UserModel, { IUserRole } from '../../schema/user.schema';
+import { GetUserByEmailDTO } from '../dtos/user.dto';
 
 export class UserController {
 	async registerController(req: Request, res: Response, next: NextFunction) {
@@ -155,6 +156,29 @@ export class UserController {
 			const userID = req.user?._id || '';
 			const updatedUserDetails = await UserService.updateUserProfileService(body, userID);
 			return res.status(200).json({ user: updatedUserDetails });
+		} catch (error: any) {
+			console.log(error);
+			next(error);
+		}
+	}
+	async getUserByEmail(req: Request, res: Response, next: NextFunction) {
+		try {
+			const body = req.body as GetUserByEmailDTO;
+			console.log('HIT', body);
+			const userDetails = await UserService.getUserByEmail({ userEmail: String(body.email), userRole: body.userRole as IUserRole });
+			console.log('userDetails: ', userDetails);
+			return res.status(200).json({ userDetails });
+		} catch (error) {
+			console.log(error);
+			next(error);
+		}
+	}
+	async verifyEmailForLinkAccount(req: Request, res: Response, next: NextFunction) {
+		try {
+			const email = req.body?.email;
+			if (!email) throw new HttpException(400, 'user id not provided');
+			const userDetails = await UserService.verifyEmailForLinkAccount(email);
+			return res.status(200).json({ userDetails });
 		} catch (error: any) {
 			console.log(error);
 			next(error);

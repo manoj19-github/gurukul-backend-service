@@ -1,6 +1,7 @@
 import {
 	ChangeEmailRequestDTO,
 	ForgotPasswordDTO,
+	GetUserByEmailDTO,
 	LoginDTO,
 	RegistrationDTO,
 	ResetEmailDTO,
@@ -51,7 +52,7 @@ export class UserRoute implements Routes {
 		this.router.get(`${this.path}/logout`, AuthMiddleware(), this.userCTRL.logoutUser);
 		this.router.get(`${this.path}/refreshtoken`, AuthMiddleware(), this.userCTRL.updateAccessToken);
 		this.router.get(`${this.path}/getloggdinuser`, AuthMiddleware(), this.userCTRL.getUserByToken);
-
-
+		this.router.post(`${this.path}/getuserbyemail`, DTOValidationMiddleware(GetUserByEmailDTO), this.userCTRL.getUserByEmail);
+		this.router.post(`${this.path}/verifyemailforsociallogin`, this.userCTRL.verifyEmailForLinkAccount);
 	}
 }

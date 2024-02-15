@@ -1,3 +1,4 @@
+import { IUserRole } from '@/schema/user.schema';
 import { Trim } from 'class-sanitizer';
 import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 export class LoginDTO {
@@ -13,6 +14,30 @@ export class LoginDTO {
 	@IsString()
 	userRole: string | undefined;
 }
+
+export class GetUserByEmailDTO {
+	@IsEmail({}, { message: 'Provided Email is not valid' })
+	@IsNotEmpty()
+	@Trim()
+	email: string | undefined;
+	@IsString()
+	@IsNotEmpty()
+	userRole?: IUserRole;
+}
+
+// export class GetUserDTO {
+// 	@IsEmail({}, { message: 'Provided Email is not valid' })
+// 	@IsNotEmpty()
+// 	@Trim()
+// 	email: string | undefined;
+// 	@IsString()
+// 	@IsNotEmpty()
+// 	@MinLength(8, { message: 'Password should be minimum of 8 characters' })
+// 	password: string | undefined;
+// 	@IsOptional()
+// 	@IsString()
+// 	userRole: string | undefined;
+// }
 
 export class RegistrationDTO {
 	@IsString()

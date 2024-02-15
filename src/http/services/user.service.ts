@@ -27,7 +27,7 @@ export class UserService {
 	): Promise<IUserSchema> {
 		const isEmailExists = await UserModel.findOne({ email, userRole });
 		//  email duplication check
-		if (!!isEmailExists) throw new HttpException(400, 'Email already exists');
+		if (!!isEmailExists) return isEmailExists;
 		// const newRegistrationUser = await new UserModel({ name, email, password, avatar, userRole, isRegistered: true }).save(opts);
 		const newRegistrationUser = await UserModel.create({ name, email, password, avatar, userRole, isRegistered: true });
 		const mailOptions: SendMailOptions = {
@@ -342,5 +342,25 @@ export class UserService {
 		const updatedUserDetails = await UserModel.findOneAndUpdate({ _id: userId }, { $set: { ...userDetails } }, { returnDocument: 'after' });
 		await redis.set(userId, JSON.stringify({ email: updatedUserDetails?.email, role: updatedUserDetails?.userRole }));
 		return updatedUserDetails;
+	}
+
+	/***
+	 * get user by user email
+	 * @param {string} userEmail
+	 * @param {string} userRole
+	 * @returns {Promise<IUserSchema | undefined>}
+	 * @memberof UserService
+	 **/
+	static async getUserByEmail({ userEmail, userRole }: { userEmail: string; userRole: IUserRole }) {
+		return await UserModel.findOne({ email: userEmail, userRole });
+	}
+	/***
+	 * get user by user email
+	 * @param {string} userId
+	 * @returns {Promise<IUserSchema | undefined>}
+	 * @memberof UserService
+	 **/
+	static async verifyEmailForLinkAccount(email: string) {
+		return await UserModel.updateOne({ email }, { $set: { isEmailVerified: true } });
 	}
 }
